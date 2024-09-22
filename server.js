@@ -16,6 +16,10 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .then(() => console.log('Conectado ao MongoDB'))
   .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
+app.get('/api/hello', (req, res) => {
+    res.json({ message: 'Hello from API!' });
+});
+
 const productRoutes = require('./routes/productRoutes');
 const saleRoutes = require('./routes/saleRoutes');
 const stockRoutes = require('./routes/stockRoutes');
