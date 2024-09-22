@@ -1,0 +1,34 @@
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const auth = require('./middleware/auth');
+
+const app = express();
+
+app.use(compression());
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Conectado ao MongoDB'))
+  .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
+
+const productRoutes = require('./routes/productRoutes');
+const saleRoutes = require('./routes/saleRoutes');
+const stockRoutes = require('./routes/stockRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
+const authRoutes = require('./routes/authRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+
+app.use('/api/auth', authRoutes);
+
+app.use('/api/products', auth, productRoutes);
+app.use('/api/sales', auth, saleRoutes);
+app.use('/api/suppliers', auth, supplierRoutes);
+app.use('/api/stock', stockRoutes);
+app.use('/api/reports', auth, reportRoutes);
+
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
