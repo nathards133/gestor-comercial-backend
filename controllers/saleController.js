@@ -12,14 +12,13 @@ exports.createSale = async (req, res) => {
         price: item.price
       })),
       totalValue: items.reduce((acc, item) => acc + item.price * item.quantidade, 0),
-      userId: req.userId
+      userId: req.userId 
     });
     await sale.save();
 
-    // Atualizar o estoque dos produtos
     for (let item of items) {
       await Product.findOneAndUpdate(
-        { _id: item._id, userId: req.userId },
+        { _id: item._id, userId: req.userId }, 
         { $inc: { quantity: -item.quantidade } }
       );
     }
@@ -51,7 +50,7 @@ exports.getSales = async (req, res) => {
 
     const sales = await Sale.find({ 
       createdAt: { $gte: startDate },
-      userId: req.userId
+      userId: req.userId // Filtra vendas pelo userId
     })
       .populate('items.product', 'name')
       .sort({ createdAt: -1 });

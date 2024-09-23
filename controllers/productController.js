@@ -8,7 +8,7 @@ exports.createProduct = async (req, res) => {
       price,
       quantity,
       barcode,
-      userId: req.userId
+      userId: req.userId 
     });
     await product.save();
     res.status(201).json(product);

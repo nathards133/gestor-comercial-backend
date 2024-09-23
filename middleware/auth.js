@@ -1,12 +1,18 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
+const auth = (req, res, next) => {
+  const token = req.header('Authorization').replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ message: 'Autenticação necessária' });
+  }
+
   try {
-    const token = req.headers.authorization.split(' ')[1];
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    req.userData = { userId: decodedToken.userId };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Autenticação falhou' });
+    res.status(401).json({ message: 'Token inválido' });
   }
 };
+
+module.exports = auth;
