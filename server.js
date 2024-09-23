@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     'gestor-comercial-backend.vercel.app',
+    'gestor-comercial-panel.vercel.app',
     'http://localhost:3000'
 ],
   credentials: true
