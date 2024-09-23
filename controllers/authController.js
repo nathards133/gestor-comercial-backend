@@ -1,57 +1,52 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { email, password, company, role } = req.body;
 
-    // Verificar se o usuário já existe
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Usuário já existe' });
+      return res.status(400).json({ message: 'Email já está em uso' });
     }
 
-    // Criar novo usuário
     const user = new User({
-      username,
+      email,
       password,
-      role: role || 'user' // Se não for especificado, o papel padrão é 'user'
+      company,
+      role: role || 'user'
     });
 
-    // Salvar o usuário
     await user.save();
 
     res.status(201).json({ message: 'Usuário registrado com sucesso' });
   } catch (error) {
+    console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    // Verificar se o usuário existe
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Usuário não encontrado' });
     }
 
-    // Verificar a senha
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Senha incorreta' });
     }
 
-    // Criar e assinar o token JWT
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, company: user.company },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: '24h' }
     );
 
-    res.json({ token, userId: user._id, role: user.role });
+    res.json({ token, userId: user._id, role: user.role, company: user.company });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
