@@ -20,10 +20,25 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ userId: req.userId });
-    res.json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const products = await Product.find({ userId: req.userId })
+      .select('name price quantity barcode') // Selecione apenas os campos necessários
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await Product.countDocuments({ userId: req.userId });
+
+    res.json({
+      products,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
 
@@ -75,28 +90,11 @@ exports.importProducts = async (req, res) => {
       userId: req.userId
     }));
 
-    // Validação básica
-    const invalidProducts = products.filter(product => 
-      !product.name || 
-      isNaN(product.price) || 
-      product.price <= 0 || 
-      isNaN(product.quantity) || 
-      product.quantity < 0 || 
-      !product.barcode
-    );
-
-    if (invalidProducts.length > 0) {
-      return res.status(400).json({ 
-        message: 'Alguns produtos são inválidos', 
-        invalidProducts 
-      });
-    }
-
-    // Inserir produtos no banco de dados
-    await Product.insertMany(products);
+    // Use insertMany com ordered: false para inserção mais rápida
+    await Product.insertMany(products, { ordered: false });
 
     res.status(201).json({ message: `${products.length} produtos importados com sucesso.` });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Erro ao importar produtos' });
   }
 };

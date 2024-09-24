@@ -15,5 +15,16 @@
                 "Access-Control-Allow-Origin": "*"
             }
         }
-    ]
+    ],
+    "functions": {
+        "api/report": {
+            "maxDuration": 300
+        },
+        "api/sales": {
+            "maxDuration": 300
+        },
+        "api/products": {
+            "maxDuration": 300
+        }
+    }
 }

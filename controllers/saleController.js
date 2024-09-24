@@ -79,6 +79,7 @@ exports.getSales = async (req, res) => {
       createdAt: { $gte: startDate, $lte: endDate },
       userId
     })
+      .select('items.product items.quantity items.price totalValue createdAt') // Selecione apenas os campos necessários
       .populate('items.product', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -110,12 +111,19 @@ exports.getSales = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Erro ao buscar vendas:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
 
 exports.getSalesStats = async (req, res) => {
   try {
+    const cacheKey = `salesStats_${req.userId}`;
+    const cachedStats = salesCache.get(cacheKey);
+
+    if (cachedStats) {
+      return res.json(cachedStats);
+    }
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -166,11 +174,10 @@ exports.getSalesStats = async (req, res) => {
       }
     ]);
 
-    res.json({
-      productStats: stats,
-      totalSales: totalSales[0] || { totalValue: 0, count: 0 }
-    });
+    salesCache.set(cacheKey, { productStats: stats, totalSales });
+
+    res.json({ productStats: stats, totalSales });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
